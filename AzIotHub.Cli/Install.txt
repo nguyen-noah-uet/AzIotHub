@@ -1,0 +1,42 @@
+﻿Installing .NET 6.0 on a Raspberry Pi involves a few steps. Here's how you can do it:
+
+Update the Raspberry Pi:
+
+sudo apt update
+sudo apt upgrade
+Install the dependencies:
+sudo apt install curl libunwind8 gettext apt-transport-https
+Add the Microsoft package signing key:
+
+curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.gpg
+sudo mv microsoft.gpg /etc/apt/trusted.gpg.d/microsoft.gpg
+Register the Microsoft package repository:
+
+sudo sh -c 'echo "deb [arch=armhf] https://packages.microsoft.com/debian/$(lsb_release -rs)/prod $(lsb_release -cs) main" > /etc/apt/sources.list.d/dotnetdev.list'
+Update the package cache:
+
+sudo apt update
+Install .NET 6.0:
+
+sudo apt install dotnet-sdk-6.0
+Once the installation is complete, you can verify that .NET 6.0 is installed by running the following command in the terminal:
+
+
+Copy code
+dotnet --version
+This should display the version number of .NET installed on your Raspberry Pi.
+
+
+
+-----------------------------------
+
+If you want to use dotnet 6, you also could download the binary file and install it.
+
+Installation inside your home directory.
+
+mkdir ~/.dotnet 
+cd ~/.dotnet
+wget https://download.visualstudio.microsoft.com/download/pr/17b6759f-1af0-41bc-ab12-209ba0377779/e8d02195dbf1434b940e0f05ae086453/dotnet-sdk-6.0.100-linux-x64.tar.gz
+tar -xf dotnet-sdk-6.0.100-linux-x64.tar.gz
+export PATH="$PATH:$HOME/.dotnet"
+rm -rf dotnet-sdk-6.0.100-linux-x64.tar.gz
