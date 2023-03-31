@@ -22,12 +22,12 @@ internal class Program
 			humidity = 70
 		};
 		string s = JsonConvert.SerializeObject(telemetryDataPoint);
-		Console.WriteLine(s);
 		Message message = new Message(Encoding.ASCII.GetBytes(s)) { ContentType = "application/json" };
 		try
 		{
 			await _deviceClient.SendEventAsync(message);
-			
+			Console.WriteLine(s);
+
 		}
 		catch (Exception ex)
 		{
