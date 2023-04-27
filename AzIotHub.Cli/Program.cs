@@ -15,12 +15,12 @@ internal class Program
 	private static readonly string 
 		DeviceConnectionString = "HostName=test0001-hub.azure-devices.net;DeviceId=device01;SharedAccessKey=cElDhUvJTVbSgy3qfdNJLQLbnTwDfClD1IoeE3Az994=";
 	private static int _fanState = 0;
-	//private static SerialPort _serialPort = new SerialPort(PortName, BaudRate);
-	//private static readonly string PortName = "COM4"; // "/dev/ttyACM0"
 	private static readonly int BaudRate = 9600;
+	private static readonly string PortName = "/dev/ttyACM0"; // "/dev/ttyACM0"
+	private static SerialPort _serialPort;
 	private static async Task Main(string[] args)
 	{
-		//ConfigureSerial(_serialPort);
+		ConfigureSerial();
 		_deviceClient = DeviceClient.CreateFromConnectionString(DeviceConnectionString, TransportType.Mqtt);
 		await _deviceClient.SetMethodDefaultHandlerAsync(fan, null);
 		
@@ -30,23 +30,24 @@ internal class Program
 		{
 			try
 			{
-				//string sensorData = _serialPort.ReadLine();
-				//DateTime t2 = DateTime.Now;
-				//if ((t2 - t1).Seconds >= 4.5)
-				//{
-				//	t1 = t2;
-				//	string correctData = sensorData
-				//			.Remove(sensorData.LastIndexOf(';'), 1)
-				//			.Replace(';', ',')
-				//			.Replace("temperature", "Temperature")
-				//			.Replace("humidity", "Humidity")
-				//			.Replace("soil_moisture", "SoilMoisture")
-				//		;
-				//	Message message = new Message(Encoding.ASCII.GetBytes(correctData))
-				//		{ ContentType = "application/json" };
-				//	await _deviceClient.SendEventAsync(message);
-				//	Console.WriteLine(correctData);
-				//}
+				string sensorData = _serialPort.ReadLine();
+				DateTime t2 = DateTime.Now;
+				if ((t2 - t1).Seconds >= 4.5)
+				{
+					t1 = t2;
+					// string correctData = sensorData
+					// 		.Remove(sensorData.LastIndexOf(';'), 1)
+					// 		.Replace(';', ',')
+					// 		.Replace("temperature", "Temperature")
+					// 		.Replace("humidity", "Humidity")
+					// 		.Replace("soil_moisture", "SoilMoisture")
+					//	;
+					Console.WriteLine(sensorData);
+					Message message = new Message(Encoding.ASCII.GetBytes(sensorData))
+						{ ContentType = "application/json" };
+					await _deviceClient.SendEventAsync(message);
+					
+				}
 				await Task.Delay(1000);
 			}
 			catch (Exception ex)
@@ -64,17 +65,19 @@ internal class Program
 		
 	}
 
-	//private static void ConfigureSerial(SerialPort? serialPort)
-	//{
-	//	serialPort.Open();
-	//	Console.WriteLine("Open Serial Connection.");
-	//	Console.CancelKeyPress += (_, _) =>
-	//	{
-	//		_serialPort.Close();
-	//		Console.WriteLine("Close Serial Connection.");
-	//		Environment.Exit(0);
-	//	};
-	//}
+	private static void ConfigureSerial()
+	{
+
+		_serialPort = new SerialPort(PortName, BaudRate);
+		_serialPort.Open();
+		Console.WriteLine("Open Serial Connection.");
+		Console.CancelKeyPress += (_, _) =>
+		{
+			_serialPort.Close();
+			Console.WriteLine("Close Serial Connection.");
+			Environment.Exit(0);
+		};
+	}
 
 	private static Task<MethodResponse> fan(MethodRequest methodrequest, object usercontext)
 	{
@@ -85,10 +88,10 @@ internal class Program
 			if(_fanState == newState)
 				return Task.FromResult(new MethodResponse(Encoding.ASCII.GetBytes("{\"Message\":\"Fan state not changed\"}"), 200));
 			_fanState = newState;
-			//_serialPort.Write(_fanState == 1 ? "1" : "0");
+			_serialPort.Write(_fanState == 1 ? "1\n" : "-1\n");
 			
 			Console.WriteLine($"Fan state updated: {_fanState}");
-			return Task.FromResult(new MethodResponse(Encoding.ASCII.GetBytes("{\"Message\":\"Fan state updated\"}"), 200));
+			return Task.FromResult(new MethodResponse(Encoding.ASCII.GetBytes($"Fan state updated: {_fanState}"), 200));
 		}
 		catch (Exception e)
 		{
